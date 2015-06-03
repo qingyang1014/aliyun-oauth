@@ -24,5 +24,13 @@
     "httpx": "~1.0.0",
     "node-uuid": "~1.4.3",
     "streamx": "~1.0.0"
+  },
+  "devDependencies": {
+    "co-mocha": "1.0.3",
+    "expect.js": "*",
+    "istanbul-harmony": "*",
+    "mm": "^1.0.1",
+    "mocha": "*",
+    "supertest": "*"
   }
 }
