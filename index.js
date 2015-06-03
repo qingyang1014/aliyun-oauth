@@ -5,6 +5,7 @@ var querystring = require('querystring');
 var httpx = require('httpx');
 var streamx = require('streamx');
 var uuid = require('node-uuid');
+var util = require('util');
 
 var sha1 = function (str, key) {
   return crypto.createHmac('sha1', key).update(str).digest("base64");
@@ -26,38 +27,9 @@ OAuth.prototype.buildParams = function () {
   };
 };
 
-OAuth.prototype.requestToken = function * (callbackUrl) {
-  var url = this.prefix + 'oauth/request_token';
+OAuth.prototype._request = function * (url, data, secret) {
   var params = this.buildParams();
-  params.oauth_callback = OAuth.encode(callbackUrl);
-
-  var method = "GET";
-  var normalized = OAuth.normalize(params);
-  var signatured = this.signature(url, method, normalized);
-  normalized.push(['oauth_signature', OAuth.encode(signatured)]);
-  var opts = {
-    method: method,
-    headers: {'Authorization': OAuth.buildAuth(normalized)}
-  };
-  var response = yield httpx.request(url, opts);
-  var buffer = yield streamx.read(response);
-  var contentType = response.headers['content-type'] || '';
-  if (contentType.indexOf('application/x-www-form-urlencoded') !== -1) {
-    return querystring.parse(buffer.toString());
-  } else {
-    var json = JSON.parse(buffer);
-    if (json.errorCode) {
-      throw new Error('OpenAPI: ' + json.errorMsg);
-    }
-    return json;
-  }
-};
-
-OAuth.prototype.getAccessToken = function * (token, verifier, secret) {
-  var url = this.prefix + 'oauth/access_token';
-  var params = this.buildParams();
-  params.oauth_token = token;
-  params.oauth_verifier = verifier;
+  util._extend(params, data);
 
   var method = "GET";
   var normalized = OAuth.normalize(params);
@@ -79,6 +51,23 @@ OAuth.prototype.getAccessToken = function * (token, verifier, secret) {
     }
     return json;
   }
+};
+
+OAuth.prototype.requestToken = function * (callbackUrl) {
+  var url = this.prefix + 'oauth/request_token';
+  var opts = {
+    oauth_callback: OAuth.encode(callbackUrl)
+  };
+  return yield* this._request(url, opts);
+};
+
+OAuth.prototype.getAccessToken = function * (token, verifier, secret) {
+  var url = this.prefix + 'oauth/request_token';
+  var opts = {
+    oauth_token: token,
+    oauth_verifier: verifier
+  };
+  return yield* this._request(url, opts, secret);
 };
 
 OAuth.prototype.getAuthUrl = function (token) {
@@ -166,84 +155,39 @@ OAuth.encode = function (str) {
 
 OAuth.prototype.load = function * (token, secret) {
   var url = this.prefix + 'openapi/id/load';
-  var params = this.buildParams();
-  params.oauth_token = token;
-  var normalized = OAuth.normalize(params);
-
-  var method = "GET";
-  var signatured = this.signature(url, method, normalized, secret);
-  normalized.push(['oauth_signature', OAuth.encode(signatured)]);
-  var opts = {
-    method: method,
-    headers: {'Authorization': OAuth.buildAuth(normalized)}
-  };
-  var response = yield httpx.request(url, opts);
-  var buffer = yield streamx.read(response);
-  var contentType = response.headers['content-type'] || '';
-  if (contentType.indexOf('application/x-www-form-urlencoded') !== -1) {
-    return querystring.parse(buffer.toString());
-  } else {
-    var json = JSON.parse(buffer);
-    if (json.errorCode) {
-      throw new Error('OpenAPI: ' + json.errorMsg);
-    }
-    return json;
-  }
+  var opts = {oauth_token: token};
+  return yield* this._request(url, opts);
 };
 
 OAuth.prototype.aliyunid_kp = function * (token, secret) {
   var url = this.prefix + 'openapi/id/aliyunid_kp';
-  var params = this.buildParams();
-  params.oauth_token = token;
-  var normalized = OAuth.normalize(params);
-
-  var method = "GET";
-  var signatured = this.signature(url, method, normalized, secret);
-  normalized.push(['oauth_signature', OAuth.encode(signatured)]);
   var opts = {
-    method: method,
-    headers: {'Authorization': OAuth.buildAuth(normalized)}
+    oauth_token: token
   };
-
-  var response = yield httpx.request(url, opts);
-  var buffer = yield streamx.read(response);
-  var contentType = response.headers['content-type'] || '';
-  if (contentType.indexOf('application/x-www-form-urlencoded') !== -1) {
-    return querystring.parse(buffer.toString());
-  } else {
-    var json = JSON.parse(buffer);
-    if (json.errorCode) {
-      throw new Error('OpenAPI: ' + json.errorMsg);
-    }
-    return json;
-  }
+  return yield* this._request(url, opts, secret);
 };
 
 OAuth.prototype.timestamp = function * (secret) {
   var url = this.prefix + 'openapi/util/timestamp';
-  var params = this.buildParams();
-  var normalized = OAuth.normalize(params);
+  return yield* this._request(url, {}, secret);
+};
 
-  var method = "GET";
-  var signatured = this.signature(url, method, normalized, secret);
-  normalized.push(['oauth_signature', OAuth.encode(signatured)]);
+OAuth.prototype.check = function * (aliyunId, token, secret) {
+  var url = this.prefix + 'openapi/id/check';
   var opts = {
-    method: method,
-    headers: {'Authorization': OAuth.buildAuth(normalized)}
+    oauth_token: token,
+    aliyunID: aliyunId
   };
+  return yield* this._request(url, opts, secret);
+};
 
-  var response = yield httpx.request(url, opts);
-  var buffer = yield streamx.read(response);
-  var contentType = response.headers['content-type'] || '';
-  if (contentType.indexOf('application/x-www-form-urlencoded') !== -1) {
-    return querystring.parse(buffer.toString());
-  } else {
-    var json = JSON.parse(buffer);
-    if (json.errorCode) {
-      throw new Error('OpenAPI: ' + json.errorMsg);
-    }
-    return json;
-  }
+OAuth.prototype.check_accesstoken_kp = function * (kp, token, secret) {
+  var url = this.prefix + 'openapi/id/check';
+  var opts = {
+    oauth_token: token,
+    kp: kp
+  };
+  return yield* this._request(url, opts, secret);
 };
 
 module.exports = OAuth;
