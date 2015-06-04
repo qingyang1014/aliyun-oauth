@@ -1,6 +1,6 @@
 {
   "name": "aliyun-oauth",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Aliyun OAuth client for ES6",
   "main": "index.js",
   "scripts": {
@@ -22,15 +22,12 @@
   "homepage": "https://github.com/JacksonTian/aliyun-oauth#readme",
   "dependencies": {
     "httpx": "~1.0.0",
-    "node-uuid": "~1.4.3",
     "streamx": "~1.0.0"
   },
   "devDependencies": {
     "co-mocha": "1.0.3",
     "expect.js": "*",
     "istanbul-harmony": "*",
-    "mm": "^1.0.1",
-    "mocha": "*",
-    "supertest": "*"
+    "mocha": "*"
   }
 }

@@ -53,12 +53,12 @@ describe('/oauth', function () {
     expect(false).to.be('should not execute to here');
   });
 
-  it('getAccessToken 40115', function * () {
+  it('getAccessToken 40113', function * () {
     var client = new OAuth('QpavStUJkTjCGixr', 'secret');
     try {
       yield client.getAccessToken('token', 'verifier', 'secret');
     } catch (ex) {
-      expect(ex.message).to.be('OpenAPI: code(40115), message(token_illegal)');
+      expect(ex.message).to.be('OpenAPI: code(40113), message(token_expired)');
       return;
     }
     expect(false).to.be('should not execute to here');
