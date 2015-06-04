@@ -6,8 +6,13 @@ Aliyun OAuth for ES6
 $ npm install aliyun-oauth --save
 ```
 
+## Documentation
+
+文档地址： http://doxmate.cool/JacksonTian/aliyun-oauth/index.html
+
 ## Usage
-```
+
+```js
 var config = require('../config');
 var OAuth = require('aliyun-oauth');
 var oauth = new OAuth(config.oauth.key, config.oauth.secret);
